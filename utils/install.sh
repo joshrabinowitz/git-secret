@@ -55,3 +55,4 @@ chmod a+x "$PREFIX"/bin/*
 chmod a+x "$PREFIX"/libexec/*
 
 echo "Installed git-secret to ${PREFIX}/bin/git-secret"
+
