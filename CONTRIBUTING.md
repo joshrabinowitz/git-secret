@@ -10,12 +10,14 @@ Before starting make sure you have:
 
 - git
 - bash
-- bundler
-- docker
 - gawk
 - gnupg (or gnupg2)
+- sha256sum (or shasum on MacOS)
+
+If you're going to run the full test enviroment with docker, you'll also need:
+- bundler
+- docker
 - ruby
-- sha256sum
 - [shellcheck](https://github.com/koalaman/shellcheck)
 - test-kitchen
 
@@ -25,17 +27,23 @@ Only required if dealing with manuals, `gh-pages` or releases:
 
 ### Environment MacOS
 
+#### Complete Test Environment:
 - install Docker for Mac
 - install Chef Developer Kit
 - install Homebrew
 - install ruby2.4 and kitchen dependencies with `brew install rbenv ruby-build rbenv-vars; rbenv install 2.4.4; rbenv rehash; rbenv global 2.4.4 ;gem install bundler kitchen-ansible serverspec kitchen-docker kitchen-verifier-serverspec`
+
+#### Just enough to develop and test on your mac:
+- install Homebrew 
+- use Homebrew's `brew` command to install gnupg and gawk
+
 
 ### Getting started
 
 1. Create your own or pick an opened issue from the [tracker][tracker]. Take a look at the [`help-wanted` tag][help-wanted]
 2. Fork and clone your repository: `git clone https://github.com/${YOUR_NAME}/git-secret.git`
 3. Make sure that everything works on the current platform by running `make test`
-4. [Run local CI tests](#running-local-ci-tests) to verify functionality on supported platforms `bundle exec kitchen verify --test-base-path="$PWD/.ci/integration"`.
+4. If you have a full `kitchen` test environment set up on your system, [Run local CI tests](#running-local-ci-tests) to verify functionality on supported platforms `bundle exec kitchen verify --test-base-path="$PWD/.ci/integration"`.
 
 ### Development Process
 
@@ -54,7 +62,6 @@ We have three long-live branches: `master`, `develop` and `gh-pages` for static 
 It basically looks like that:
 
 > `your-branch` -> `develop` -> `master`
-
 - `master` branch is protected. So only fully tested code goes there. It is also used to create a new `git` tag and a `github` release
 - `develop` is where the development is done and the branch you should send your pull-requests to
 
