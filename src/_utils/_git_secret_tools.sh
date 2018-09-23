@@ -435,6 +435,12 @@ function _abort {
   exit 1
 }
 
+function _warn {
+  local message="$1" # required
+
+  >&2 echo "git-secret: warning: $message"
+}
+
 function _find_and_clean {
   # required:
   local pattern="$1" # can be any string pattern
@@ -597,8 +603,12 @@ function _get_user_key_expiry {
   # It will return the empty string if there is no expiry date for the user's key
   local username="$1"
   local line
-  line=$($SECRETS_GPG_COMMAND --homedir "$secrets_dir_keys" --no-permission-warning --list-public-keys --with-colon --fixed-list-mode "$username" ) #| grep ^sub:)
-  echo "# line: $line" >&3
+
+  local secrets_dir_keys
+  secrets_dir_keys=$(_get_secrets_dir_keys)
+
+  line=$($SECRETS_GPG_COMMAND --homedir "$secrets_dir_keys" --no-permission-warning --list-public-keys --with-colon --fixed-list-mode "$username" | grep ^pub:)
+
   local expiry_epoch
   expiry_epoch=$(echo "$line" | cut -d: -f7)
   echo "$expiry_epoch"
