@@ -38,12 +38,12 @@ function reveal {
   for user in "${users[@]}"; do
     local expiry
     expiry=$(_get_user_key_expiry "$user")
-    echo "# EXPIRY: user $user, expiry '$expiry'" >&3
-    #awk 'BEGIN { print strftime("%Y-%m-%d %H:%M:%S", 1234567890); }'
+    #echo "# EXPIRY: user $user, expiry '$expiry'" >&3
     if [[ -n "$expiry" ]]; then
       local expiry_date
       expiry_date=$(echo "$expiry" | gawk '{ print strftime("%Y-%m-%d %H:%M:%S", $1); }')
-      echo "# expiry date='$expiry_date'" >&3
+      #echo "# expiry date='$expiry_date'" >&3
+      _warn "warning: key for '$user' expires on '$expiry_date'"
     fi
   done
   
