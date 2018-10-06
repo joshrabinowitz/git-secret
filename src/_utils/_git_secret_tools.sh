@@ -633,6 +633,41 @@ function _get_recipients {
   echo "$result"
 }
 
+function _get_fingerprint_from_gitsecret_keyring {
+  local email="$1"
+  local secrets_dir_keys
+  secrets_dir_keys=$(_get_secrets_dir_keys)
+  local fingerprint
+  fingerprint=$(_get_fingerprint_from_gpg_keyring $1 "$secrets_dir_keys")
+  echo "$fingerprint"
+}
+ 
+function _get_fingerprint_from_gpg_keyring {
+  local email=$1
+  local homedir="$2"
+
+  echo "# tell: getting fingerprint for $email" >&3
+
+  local args=()
+  if [[ -n "$homedir" ]]; then
+    args+=( "--homedir" "$homedir" )
+  fi
+
+  local fingerprint
+  echo "# $SECRETS_GPG_COMMAND "${args[@]}" --no-permission-warning --list-public-keys --with-colon --fixed-list-mode --fingerprint | /home/joshr/gitsrc/git-secret/keylist2fingerprints.pl | grep "^$email " | cut -d' ' -f2" >&3
+
+  $SECRETS_GPG_COMMAND "${args[@]}" --no-permission-warning --list-public-keys --with-colon --fixed-list-mode --fingerprint | /home/joshr/gitsrc/git-secret/keylist2fingerprints.pl | grep $email | sed -e 's/^/# /' >&3
+
+  fingerprint=$($SECRETS_GPG_COMMAND "${args[@]}" --no-permission-warning --list-public-keys --with-colon --fixed-list-mode --fingerprint | ./keylist2fingerprints.pl | grep ^"$email " | cut -d' ' -f2 )
+  # keylist2fingerprints.pl returns lines like
+    # examp@xl18.examp.com 5C43BCCB38AC6A237DB7D912330F3E0D33CF057D
+    # examp@lesliesmacbookair.examp.com 4756C771077284DA88191B33D488D90470D2D686
+    # examp@test.xl18.examp.com 999E6B34384A6237D6C43991E9E821BDE0E58FD3
+  # which we grep for the email, and extract the fingerprint
+  echo "$fingerprint"
+}
+
+
 
 function _decrypt {
   # required:
