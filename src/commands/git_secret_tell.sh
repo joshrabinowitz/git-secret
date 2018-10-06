@@ -74,6 +74,10 @@ function tell {
     # shellcheck disable=2154
     local keyfile="$filename"
 
+    local fingerprint
+    fingerprint=$(_get_fingerprint_from_gpg_keyring "$email" "$homedir")
+    echo "# tell: got fingerprint for $email: $fingerprint" >&3
+
     local exit_code
     if [[ -z "$homedir" ]]; then
       $SECRETS_GPG_COMMAND --export -a "$email" > "$keyfile"
