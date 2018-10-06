@@ -81,6 +81,8 @@ function get_gpg_fingerprint_by_email {
   fingerprint=$($GPGTEST --with-fingerprint \
                          --with-colon \
                          --list-secret-key $email | gawk "$AWK_GPG_GET_FP")
+  # note: this possibly can return multiple fingerprints, 
+  # see https://github.com/sobolevn/git-secret/issues/268
   echo "$fingerprint"
 }
 
