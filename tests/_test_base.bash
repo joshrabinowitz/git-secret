@@ -43,6 +43,8 @@ TEST_NONAME_USER="user3@gitsecret.io"
 # TEST_EXPIRED_USER (user4) has expired
 TEST_EXPIRED_USER="user4@gitsecret.io"    # this key expires 2018-09-24
 
+TEST_REVOKED_USER="user5@gitsecret.io"	  # this key has been revoked
+
 TEST_ATTACKER_USER="attacker1@gitsecret.io"
 
 #TEST_DEFAULT_FILENAME="file_one"  # no spaces
@@ -80,7 +82,8 @@ function get_gpgtest_prefix {
   fi
 }
 
-
+# note: this has the same 'username matching' issue described in 
+# https://github.com/sobolevn/git-secret/issues/268
 function get_gpg_fingerprint_by_email {
   local email="$1"
   local fingerprint
@@ -126,6 +129,18 @@ function install_fixture_full_key {
   echo "$fingerprint"
 }
 
+function revoke_fixture_key {
+
+  #$GPGTEST --keyserver pgp.mit.edu --recv-keys 0xf27029dc3c7b40b5 
+
+  local revocation_certificate="$FIXTURES_DIR/gpg/${1}/revocation-cert.txt"
+  $GPGTEST --import "$revocation_certificate"	
+
+  #$GPGTEST --send-keys -dry-run 3C7B40B5
+  #$GPGTEST --verbose --dry-run --keyserver pgp.mit.edu --send-keys 3C7B40B5
+  # above is the fingerprint for user5@gitsecret.io
+
+}
 
 function uninstall_fixture_key {
   local email
