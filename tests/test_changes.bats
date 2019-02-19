@@ -58,7 +58,26 @@ function teardown {
 
   local num_lines=$(echo "$output" | wc -l)
   [[ "$num_lines" -eq 6 ]]
+}
 
+@test "run 'changes -g' with one file changed" {
+  local password=$(test_user_password "$TEST_DEFAULT_USER")
+  local new_content="new content"
+  echo "$new_content" >> "$FILE_TO_HIDE"
+
+  run git secret changes -g -d "$TEST_GPG_HOMEDIR" -p "$password" "$FILE_TO_HIDE"
+  [ "$status" -eq 0 ]
+
+  # Testing that output has both filename and changes:
+  local fullpath=$(_append_root_path "$FILE_TO_HIDE")
+  [[ "$output" == *"changes in $fullpath"* ]]
+  [[ "$output" == *"hidden content юникод"* ]]
+  [[ "$output" == *"+$new_content"* ]]
+
+  echo "$output" | sed "s/^/# '$BATS_TEST_DESCRIPTION' output: /" >&3
+
+  local num_lines=$(echo "$output" | wc -l)
+  [[ "$num_lines" -eq 6 ]]
 }
 
 @test "run 'changes' with source file missing" {

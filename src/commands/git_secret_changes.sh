@@ -2,6 +2,7 @@
 
 function changes {
   local passphrase=""
+  local gitdiff=0
 
   OPTIND=1
 
@@ -12,6 +13,8 @@ function changes {
       p) passphrase=$OPTARG;;
 
       d) homedir=$OPTARG;;
+
+      g) gitdiff=1;;
 
       *) _invalid_option_for 'changes';;
     esac
@@ -64,6 +67,11 @@ function changes {
     echo "changes in ${path}:"
     # diff the result:
     # we have the '|| true' because `diff` returns error code if files differ.
-    diff -u <(echo -n "$decrypted") "$path" || true
+    if [[ "$gitdiff" ]]; do
+      git diff -u <(echo -n "$decrypted") "$path" || true
+    else
+      diff -u <(echo -n "$decrypted") "$path" || true
+    done
+    
   done
 }
