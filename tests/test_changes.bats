@@ -66,6 +66,9 @@ function teardown {
   echo "$new_content" >> "$FILE_TO_HIDE"
 
   run git secret changes -g -d "$TEST_GPG_HOMEDIR" -p "$password" "$FILE_TO_HIDE"
+
+  echo "$output" | sed "s/^/# '$BATS_TEST_DESCRIPTION' output: /" >&3
+
   [ "$status" -eq 0 ]
 
   # Testing that output has both filename and changes:

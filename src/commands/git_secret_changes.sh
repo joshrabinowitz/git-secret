@@ -6,7 +6,7 @@ function changes {
 
   OPTIND=1
 
-  while getopts 'hd:p:' opt; do
+  while getopts 'ghd:p:' opt; do
     case "$opt" in
       h) _show_manual_for 'changes';;
 
@@ -67,11 +67,14 @@ function changes {
     echo "changes in ${path}:"
     # diff the result:
     # we have the '|| true' because `diff` returns error code if files differ.
-    if [[ "$gitdiff" ]]; do
-      git diff -u <(echo -n "$decrypted") "$path" || true
+    if [[ "$gitdiff" = 1 ]]; then
+      set +e
+      #(diff -u <(echo -n "$decrypted") "${path}")  | (patch -u -p1 "$path" -)
+      (diff -u "${path}" <(echo -n "$decrypted")) | (patch -u -p1 "$path" --output -)
+      set -e
     else
       diff -u <(echo -n "$decrypted") "$path" || true
-    done
+    fi
     
   done
 }
