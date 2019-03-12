@@ -2,6 +2,8 @@
 
 set -e
 
+echo "# in .ci/before_script.sh"
+
 # Linux helper functions:
 function update_linux() {
   sudo apt-get update -qq
@@ -37,3 +39,5 @@ if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ -n "$KITCHEN_REGEXP" ]]; then
   update_linux
   install_ansible
 fi
+
+echo "# exiting .ci/before_script.sh"
