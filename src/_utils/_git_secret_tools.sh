@@ -8,7 +8,6 @@ _SECRETS_DIR_KEYS="${_SECRETS_DIR}/keys"
 _SECRETS_DIR_PATHS="${_SECRETS_DIR}/paths"
 
 # Files:
-_SECRETS_DIR_KEYS_MAPPING="${_SECRETS_DIR_KEYS}/mapping.cfg"
 _SECRETS_DIR_KEYS_TRUSTDB="${_SECRETS_DIR_KEYS}/trustdb.gpg"
 
 _SECRETS_DIR_PATHS_MAPPING="${_SECRETS_DIR_PATHS}/mapping.cfg"
@@ -395,11 +394,6 @@ function _get_secrets_dir_path {
 }
 
 
-function _get_secrets_dir_keys_mapping {
-  _append_root_path "${_SECRETS_DIR_KEYS_MAPPING}"
-}
-
-
 function _get_secrets_dir_keys_trustdb {
   _append_root_path "${_SECRETS_DIR_KEYS_TRUSTDB}"
 }
@@ -596,6 +590,7 @@ function _assert_keychain_contains_emails {
     for uid in $gpg_uids; do
         if [[ "$uid" == "$email" ]]; then
             email_ok=1
+            break
         fi
     done
     if [[ $email_ok -eq 0 ]]; then
@@ -625,10 +620,10 @@ function _get_users_in_gpg_keyring {
     args+=( "--homedir" "$homedir" )
   fi
 
-  # pluck out 'uid' lines, fetch 10th field, extract part in <> if it exists (else leave alone).
   # we use --fixed-list-mode so older versions of gpg emit 'uid:' lines.
-  # sed at the end is to extract email from <>. (If there's no <>, then the line is just an email address anyway.)
-  result=$($SECRETS_GPG_COMMAND "${args[@]}" --no-permission-warning --list-public-keys --with-colon --fixed-list-mode | grep ^uid: | cut -d: -f10 | sed 's/.*<\(.*\)>.*/\1/')
+  # here gawk splits on colon as --with-colon, exact matches field 1 as 'uid', and selects field 10 "User-ID" 
+  # the gensub regex extracts email from <> within field 10. (If there's no <>, then field is just an email address anyway and the regex just passes it through.)
+  result=$($SECRETS_GPG_COMMAND "${args[@]}" --no-permission-warning --list-public-keys --with-colon --fixed-list-mode | gawk -F: '$1~/uid/{print gensub(/.*<(.*)>.*/, "\\1", "g", $10); }')
 
   echo "$result"
 }
