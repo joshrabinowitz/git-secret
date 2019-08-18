@@ -611,7 +611,7 @@ function _get_encrypted_filename {
 
 
 function _get_users_in_gpg_keyring {
-  # show the users in the gpg keyring.
+  # show the users in the gpg keyring with keys that appear ok.
   # `whoknows` command uses it internally.
   # parses the `gpg` public keys
   local homedir=$1
@@ -621,10 +621,15 @@ function _get_users_in_gpg_keyring {
     args+=( "--homedir" "$homedir" )
   fi
 
-  # we use --fixed-list-mode so older versions of gpg emit 'uid:' lines.
-  # here gawk splits on colon as --with-colon, exact matches field 1 as 'uid' that is not revoked (field 2 set to 'r') and selects field 10 "User-ID"
-  # the gensub regex extracts email from <> within field 10. (If there's no <>, then field is just an email address anyway and the regex just passes it through.)
-  result=$($SECRETS_GPG_COMMAND "${args[@]}" --no-permission-warning --list-public-keys --with-colon --fixed-list-mode | gawk -F: '$1~/uid/&&$2!="r"{print gensub(/.*<(.*)>.*/, "\\1", "g", $10); }')
+  # We use gpg --fixed-list-mode --with-colon,
+  # then gawk splits on colon, selects lines with field 1 matching 'uid'
+  # then skips lines where $2 is r [revoked], i [invalid], d [disabled], e [expired] or n [not valid],
+  # and selects field 10 "User-ID"
+  # the gensub regex extracts email from <> within field 10. 
+  #   (If there's no <> in field 10 as with keys made with --quick-generate-key, 
+  #    then it's just an email address and the regex passes it through.
+  # This could have better error reporting in verbose mode (which keys we're skipping and why)
+  result=$($SECRETS_GPG_COMMAND "${args[@]}" --no-permission-warning --list-public-keys --with-colon --fixed-list-mode | gawk -F: '$1~/uid/ && $2!="r" && $2!="i" && $2!="d" && $2!="e" && $2!="n" {print gensub(/.*<(.*)>.*/, "\\1", "g", $10); }')
 
   echo "$result"
 }
@@ -645,7 +650,6 @@ function _get_users_in_gitsecret_keyring {
 function _get_recipients {
   # This function is required to create an encrypted file for different users.
   # These users are called 'recipients' in the `gpg` terms.
-  # It basically just parses the `gpg` public keys
 
   local result
   result=$(_get_users_in_gitsecret_keyring | sed 's/^/-r/')   # put -r before each user
