@@ -99,7 +99,8 @@ function tell {
 
     local args=( --homedir "$secrets_dir_keys" --no-permission-warning --import "$keyfile" )
     if [[ -z "$_SECRETS_VERBOSE" ]]; then
-      $SECRETS_GPG_COMMAND "${args[@]}" > /dev/null 2>&1
+     # let stderr through
+      $SECRETS_GPG_COMMAND "${args[@]}" > /dev/null
     else
       $SECRETS_GPG_COMMAND "${args[@]}"
     fi

@@ -170,11 +170,12 @@ function hide {
 
         set +e   # disable 'set -e' so we can capture exit_code
 
-        if [[ -n "$_SECRETS_VERBOSE" ]]; then
+        if [[ -z "$_SECRETS_VERBOSE" ]]; then
+	  # let stderr through
+          $SECRETS_GPG_COMMAND "${args[@]}" > /dev/null
+        else 
           # on at least some platforms, this doesn't output anything unless there's a warning or error
           $SECRETS_GPG_COMMAND "${args[@]}"
-        else 
-          $SECRETS_GPG_COMMAND "${args[@]}" > /dev/null 2>&1
         fi
         local exit_code=$?
 
