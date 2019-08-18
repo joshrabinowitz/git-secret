@@ -172,7 +172,7 @@ function hide {
 
         if [[ -z "$_SECRETS_VERBOSE" ]]; then
 	  # let stderr through
-          $SECRETS_GPG_COMMAND "${args[@]}" > /dev/null
+          $SECRETS_GPG_COMMAND --quiet --no-verbose "${args[@]}" > /dev/null
         else 
           # on at least some platforms, this doesn't output anything unless there's a warning or error
           $SECRETS_GPG_COMMAND "${args[@]}"
