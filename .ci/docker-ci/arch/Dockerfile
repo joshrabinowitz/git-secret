@@ -9,6 +9,7 @@ RUN pacman -Syu --needed --noconfirm \
   gawk \
   git \
   gnupg \
+  diffutils \
   # Assumed to be present:
   file \
   make \
