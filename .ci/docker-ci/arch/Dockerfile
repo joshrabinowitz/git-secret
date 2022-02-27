@@ -1,4 +1,4 @@
-FROM arch:latest
+FROM archlinux:latest
 
 LABEL maintainer="mail@sobolevn.me"
 LABEL vendor="git-secret team"
