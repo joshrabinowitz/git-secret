@@ -3,7 +3,7 @@ FROM archlinux:latest
 LABEL maintainer="mail@sobolevn.me"
 LABEL vendor="git-secret team"
 
-RUN pacman -S \
+RUN pacman -Syu --needed --noconfirm \
   # Direct dependencies:
   bash \
   gawk \
