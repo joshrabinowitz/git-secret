@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 'git-secret-changes'
-date: 2022-04-16 00:13:31 +0000
+date: 2022-04-18 11:19:07 +0000
 permalink: git-secret-changes
 categories: command
 ---
@@ -14,7 +14,7 @@ git-secret-changes - view diff of the hidden files.
 
 
 ## DESCRIPTION
-`git-secret-changes` - show changes between the current versions of secret files and encrypted versions.
+`git-secret-changes` - shows changes between the current versions of secret files and encrypted versions.
 
 If no filenames are provided, changes to all hidden files will be shown. Alternately,
 provide any number of hidden files to this command as arguments, and it will show changes for those files.
