@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 'git-secret-remove'
-date: 2022-04-24 13:30:08 +0000
+date: 2022-04-24 13:33:16 +0000
 permalink: git-secret-remove
 categories: command
 ---
