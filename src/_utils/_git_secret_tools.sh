@@ -744,6 +744,16 @@ function _extract_emails_from_gpg_output {
   echo "$emails"
 }
 
+function _get_gpg_fingerprint_by_email {
+  local email="$1"
+  local fingerprint
+
+  fingerprint=$($GPGTEST --with-fingerprint \
+                         --with-colon \
+                         --list-secret-key "$email" | gawk "$AWK_GPG_GET_FP")
+  echo "$fingerprint"
+}
+
 
 function _get_users_in_gitsecret_keyring {
   # show the users in the gitsecret keyring.

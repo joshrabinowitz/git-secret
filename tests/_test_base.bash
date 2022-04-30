@@ -36,6 +36,36 @@ BEGIN { OFS=":"; FS=":"; }
 }
 '
 
+function is_gnupg_fingerprint {
+  local fingerprint="$1"
+  local fingerprint_file="$2"
+
+  if [ -z "$fingerprint_file" ]; then
+    fingerprint_file="$TEST_GPG_HOMEDIR/pubring.gpg"
+  fi
+
+  if [ -z "$fingerprint" ]; then
+    echo "is_gnupg_fingerprint: fingerprint is empty"
+    return 1
+  fi
+
+  if [ ! -f "$fingerprint_file" ]; then
+    echo "is_gnupg_fingerprint: fingerprint_file does not exist: $fingerprint_file"
+    return 1
+  fi
+
+  local fingerprint_from_file=$(
+    gpg --homedir "$TEST_GPG_HOMEDIR" --list-keys --with-colons "$fingerprint" |
+    awk "$AWK_GPG_GET_FP"
+  )
+
+  if [ "$fingerprint_from_file" != "$fingerprint" ]; then
+    echo "is_gnupg_fingerprint: fingerprint_from_file does not match fingerprint: $fingerprint_from_file"
+    return 1
+  fi
+
+  return 0
+}
 # git >= 2.28.0 supports --initial-branch=main
 function is_git_version_ge_2_28_0 { # based on code from github autopilot
     # shellcheck disable=SC2155
@@ -144,15 +174,6 @@ function get_gpgtest_prefix {
 }
 
 
-function get_gpg_fingerprint_by_email {
-  local email="$1"
-  local fingerprint
-
-  fingerprint=$($GPGTEST --with-fingerprint \
-                         --with-colon \
-                         --list-secret-key "$email" | gawk "$AWK_GPG_GET_FP")
-  echo "$fingerprint"
-}
 
 
 function install_fixture_key {
@@ -180,7 +201,7 @@ function install_fixture_full_key {
     --import \"$private_key\"" >> "${TEST_OUTPUT_FILE}" 2>&1
 
   # since 0.1.2 fingerprint is returned:
-  fingerprint=$(get_gpg_fingerprint_by_email "$email")
+  fingerprint=$(_get_gpg_fingerprint_by_email "$email")
 
   install_fixture_key "$1"
 
@@ -205,7 +226,7 @@ function uninstall_fixture_full_key {
   local fingerprint="$2"
   if [[ -z "$fingerprint" ]]; then
     # see issue_12, fingerprint on `gpg2` has different format:
-    fingerprint=$(get_gpg_fingerprint_by_email "$email")
+    fingerprint=$(_get_gpg_fingerprint_by_email "$email")
   fi
 
   $GPGTEST --yes --delete-secret-keys "$fingerprint" >> "$TEST_OUTPUT_FILE" 2>&1

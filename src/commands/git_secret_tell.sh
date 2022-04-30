@@ -80,6 +80,9 @@ function tell {
     # shellcheck disable=SC2154
     local keyfile="$temporary_filename"
 
+ 
+
+
     # 3>&- closes fd 3 for bats, see https://github.com/bats-core/bats-core#file-descriptor-3-read-this-if-bats-hangs
     local exit_code
     if [[ -z "$homedir" ]]; then
@@ -88,8 +91,7 @@ function tell {
     else
       # This means that homedir is set as an extra argument via `-d`:
       # we no longer use --no-permission-warning here, for #811
-      $SECRETS_GPG_COMMAND --homedir="$homedir" \
-        --export -a "$email" > "$keyfile" 3>&-
+      $SECRETS_GPG_COMMAND --homedir="$homedir" --export -a "$email" > "$keyfile" 3>&-
       exit_code=$?
     fi
     if [[ "$exit_code" -ne 0 ]]; then
@@ -103,6 +105,11 @@ function tell {
     # Importing public key to the local keyring:
     local args=( --homedir "$secrets_dir_keys" --import "$keyfile" )
     if [[ -z "$_SECRETS_VERBOSE" ]]; then
+    
+      # temp code to show fingerprint
+      local fingerprint # temp code
+      fingerprint=_get_gpg_fingerprint_by_email "$email" # temp code
+
       $SECRETS_GPG_COMMAND "${args[@]}" > /dev/null 2>&1 3>&-
     else
       $SECRETS_GPG_COMMAND "${args[@]}" 3>&-
