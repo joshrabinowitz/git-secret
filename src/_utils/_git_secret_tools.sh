@@ -133,6 +133,10 @@ function _os_based {
       "$1_linux" "${@:2}"
     ;;
 
+    MSYS*)
+      "$1_linux" "${@:2}"
+    ;;
+
     CYGWIN*)
       "$1_linux" "${@:2}"
     ;;
@@ -465,35 +469,22 @@ function _warn_or_abort {
 }
 
 
-function _find_and_remove_secrets {
-  # required:
-  local pattern="$1" # can be any string pattern
-
-  local verbose_opt=''
-  if [[ -n "$_SECRETS_VERBOSE" ]]; then
-    verbose_opt='v';
-  fi
-
-  local root
-  root=$(_get_git_root_path)
-
-  # shellcheck disable=SC2086
-  find "$root" -path "$pattern" -type f -print0 | xargs -0 rm -f$verbose_opt
-}
-
-
 function _find_and_remove_secrets_formatted {
-  # required:
-  local pattern="$1" # can be any string pattern
+  local filenames
+  _list_all_added_files # sets array variable 'filenames'
 
-  local outputs
-  outputs=$(_find_and_remove_secrets "$pattern")
-
-  if [[ -n "$_SECRETS_VERBOSE" ]] && [[ -n "$outputs" ]]; then
-    # shellcheck disable=SC2001
-    echo "$outputs" | sed "s/^/git-secret: cleaning: /"
-  fi
+  for filename in "${filenames[@]}"; do
+    local path # absolute path
+    encrypted_filename=$(_get_encrypted_filename "$filename")
+    if [[ -f "$encrypted_filename" ]]; then
+      rm "$encrypted_filename"
+      if [[ -n "$_SECRETS_VERBOSE" ]]; then
+        echo "git-secret: deleted: $encrypted_filename"
+      fi
+    fi
+  done
 }
+
 
 
 # this sets the global array variable 'filenames'
@@ -502,7 +493,7 @@ function _list_all_added_files {
   path_mappings=$(_get_secrets_dir_paths_mapping)
 
   if [[ ! -s "$path_mappings" ]]; then
-    _abort "$path_mappings is missing."
+    _abort "path_mappings file is missing or empty: $path_mappings"
   fi
 
   local filename
@@ -540,7 +531,7 @@ function _secrets_dir_is_not_ignored {
   ignores=$(_check_ignore "$git_secret_dir")
 
   if [[ ! $ignores -eq 1 ]]; then
-    _abort "'$git_secret_dir' is in .gitignore"
+    _abort "entry already in .gitignore: $git_secret_dir"
   fi
 }
 
@@ -793,55 +784,59 @@ function _decrypt {
   local encrypted_filename
   encrypted_filename=$(_get_encrypted_filename "$filename")
 
-  local args=( "--use-agent" "--decrypt" )
-
-  if [[ "$write_to_file" -eq 1 ]]; then
-    args+=( "-o" "$filename" )
-  fi
-
-  if [[ "$force" -eq 1 ]]; then
-    args+=( "--yes" )
-  fi
-
-  if [[ -n "$homedir" ]]; then
-    args+=( "--homedir" "$homedir" )
-  fi
-
-  if [[ "$GPG_VER_MIN_21" -eq 1 ]]; then
-    if [[ -n "$SECRETS_PINENTRY" ]]; then
-      args+=( "--pinentry-mode" "$SECRETS_PINENTRY" )
-    else
-      args+=( "--pinentry-mode" "loopback" )
-    fi
-  fi
-
-  if [[ -z "$_SECRETS_VERBOSE" ]]; then
-    # we no longer use --no-permission-warning here, for #811
-    args+=( "--quiet" )
-  fi
-
-  set +e   # disable 'set -e' so we can capture exit_code
-
-  #echo "# gpg passphrase: $passphrase" >&3
-  local exit_code
-  if [[ -n "$passphrase" ]]; then
-    exec 5<<<"$passphrase"  # use 5, because descriptors 3 and 4 are used by bats
-    $SECRETS_GPG_COMMAND "${args[@]}" --batch --yes --no-tty --passphrase-fd 5 "$encrypted_filename"
-    exit_code=$?
-    exec 5>&-   # close file descriptor 5
+  if [ ! -f "$encrypted_filename" ]; then
+    _warn_or_abort "cannot find file to decrypt: $encrypted_filename" "1" "$error_ok"
   else
-    $SECRETS_GPG_COMMAND "${args[@]}" "$encrypted_filename"
-    exit_code=$?
-  fi
-
-  set -e  # re-enable set -e
-
-  # note that according to https://github.com/sobolevn/git-secret/issues/238 ,
-  # it's possible for gpg to return a 0 exit code but not have decrypted the file
-  #echo "# gpg exit code: $exit_code, error_ok: $error_ok" >&3
-  if [[ "$exit_code" -ne "0" ]]; then
-    local msg="problem decrypting file with gpg: exit code $exit_code: $filename"
-    _warn_or_abort "$msg" "$exit_code" "$error_ok"
+    local args=( "--use-agent" "--decrypt" )
+  
+    if [[ "$write_to_file" -eq 1 ]]; then
+      args+=( "-o" "$filename" )
+    fi
+  
+    if [[ "$force" -eq 1 ]]; then
+      args+=( "--yes" )
+    fi
+  
+    if [[ -n "$homedir" ]]; then
+      args+=( "--homedir" "$homedir" )
+    fi
+  
+    if [[ "$GPG_VER_MIN_21" -eq 1 ]]; then
+      if [[ -n "$SECRETS_PINENTRY" ]]; then
+        args+=( "--pinentry-mode" "$SECRETS_PINENTRY" )
+      else
+        args+=( "--pinentry-mode" "loopback" )
+      fi
+    fi
+  
+    if [[ -z "$_SECRETS_VERBOSE" ]]; then
+      # we no longer use --no-permission-warning here, for #811
+      args+=( "--quiet" )
+    fi
+  
+    set +e   # disable 'set -e' so we can capture exit_code
+  
+    #echo "# gpg passphrase: $passphrase" >&3
+    local exit_code
+    if [[ -n "$passphrase" ]]; then
+      exec 5<<<"$passphrase"  # use 5, because descriptors 3 and 4 are used by bats
+      $SECRETS_GPG_COMMAND "${args[@]}" --batch --yes --no-tty --passphrase-fd 5 "$encrypted_filename"
+      exit_code=$?
+      exec 5>&-   # close file descriptor 5
+    else
+      $SECRETS_GPG_COMMAND "${args[@]}" "$encrypted_filename"
+      exit_code=$?
+    fi
+  
+    set -e  # re-enable set -e
+  
+    # note that according to https://github.com/sobolevn/git-secret/issues/238 ,
+    # it's possible for gpg to return a 0 exit code but not have decrypted the file
+    #echo "# gpg exit code: $exit_code, error_ok: $error_ok" >&3
+    if [[ "$exit_code" -ne "0" ]]; then
+      local msg="problem decrypting file with gpg: exit code $exit_code: $filename"
+      _warn_or_abort "$msg" "$exit_code" "$error_ok"
+    fi
   fi
 
   # at this point the file should be written to disk or output to stdout

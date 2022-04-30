@@ -9,23 +9,29 @@
   in text format rather than binary (#631)
 - Allow gnupg permission warnings in `tell`, `hide`, `reveal`, and `removeperson` (#811)
 - `git secret init` now sets `.gitsecret/keys` permission to 0700 (#811)
+- Improve verbose and non-verbose output
 
 ### Bugfixes
 
 - Fix adding newlines to `.gitignore` entries (#643)
 - Fix `cat` and `reveal` on named files while in repo subdir (#710)
+- Fix `clean`, `hide`, `reveal` so they only remove marked secret files (#833)
 - Fix for `removeperson` if same email is present multiple times (#638)
 - Correct error message about files missing from .gitignore
 
 ### Misc
 
 - Rename `killperson` command to `removeperson` (#684)
+- Improve error messaging decrypting nonexistent files (#706)
 - Improve, expand, correct, and update docs (#699)
 - Update docs for use with CI/CD server (#675)
 - Upgrade bats-core to v1.6.0 (#755)
 - Test, and build RPMS, with Rocky and Alma Linux instead of CentOS (#765)
+- Automate testing code on windows using WSL (#846)
+- Automate testing code on FreeBSD (#455)
 - Improve testing of .gitignore contents (#792)
 - Automate running verbose tests with SECRETS_TEST_VERBOSE=1 (#794)
+- Improve documentation about installing on Windows (#843)
 
 
 ## 0.4.0
