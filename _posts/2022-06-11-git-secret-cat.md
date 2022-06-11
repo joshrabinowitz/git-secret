@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 'git-secret-cat'
-date: 2022-06-10 17:02:51 +0000
+date: 2022-06-11 15:25:53 +0000
 permalink: git-secret-cat
 categories: command
 ---
