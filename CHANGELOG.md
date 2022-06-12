@@ -2,10 +2,15 @@
 
 ## {{Next Version}}
 
+### Features
+
+- Have `hide -v` show output from gnupg (#887)
+
 ### Misc
 
 - Improve error messaging when we cannot find git repo (#874)
 - Temporarily disable apk builds on alpine (#881)
+- Documentation and code comment fixes and updates
 
 ## 0.5.0
 
