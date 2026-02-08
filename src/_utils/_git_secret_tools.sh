@@ -215,6 +215,7 @@ function _gawk_inplace {
   local program_file
   program_file=$(_os_based __temp_file)
   printf '%s' "$program" > "$program_file"
+  trap 'rm -f "$program_file"' RETURN
 
   local gawk_args=()
   for index in "${!parms[@]}"; do
@@ -226,10 +227,8 @@ function _gawk_inplace {
   done
 
   if ! gawk "${gawk_args[@]}" > "$temporary_filename"; then
-    rm -f "$program_file"
     return 1
   fi
-  rm -f "$program_file"
   mv "$temporary_filename" "$dest_file"
 }
 
