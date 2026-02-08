@@ -271,4 +271,11 @@ Test files by GPG key usage:
 
 ## Conclusion
 
-The slowness is NOT caused by dirmngr or network operations. The primary cause is repeated GPG key import/delete operations in per-test setup/teardown. Migrating to file-level setup can provide 30-50% speed improvements with moderate refactoring effort.
+The slowness is NOT caused by dirmngr or network operations. The primary cause is repeated GPG key import/delete operations in per-test setup/teardown. 
+
+Based on proof-of-concept measurements:
+- Individual test files show 4-5% improvement with file-level setup
+- Migrating all test files would likely provide **5-10% total speedup**
+- Further optimizations (keeping GPG agent alive, reducing file system churn) would be needed for more dramatic improvements
+
+The GPG offline configuration provides defense-in-depth against future network-related slowdowns and ensures tests remain fast and deterministic.
