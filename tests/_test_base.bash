@@ -87,6 +87,39 @@ export TEST_THIRD_FILENAME='space file three'  # has spaces
 export TEST_FOURTH_FILENAME='space file three [] * $'  # has spaces and special chars
 
 
+function setup_gpg_offline_config {
+  # Create gpg.conf to disable network operations and speed up tests
+  # This prevents dirmngr from trying to contact keyservers or perform network operations
+  local gpg_conf="$TEST_GPG_HOMEDIR/gpg.conf"
+  
+  cat > "$gpg_conf" <<EOF
+# Test configuration to disable network operations for faster tests
+no-auto-key-retrieve
+keyserver-options no-auto-key-retrieve
+keyserver-options no-honor-keyserver-url
+no-greeting
+# Additional performance optimizations
+trust-model always
+# Disable auto-check-trustdb which can be slow
+no-auto-check-trustdb
+EOF
+
+  # Create dirmngr.conf to disable network operations
+  local dirmngr_conf="$TEST_GPG_HOMEDIR/dirmngr.conf"
+  
+  cat > "$dirmngr_conf" <<EOF
+# Test configuration to disable network operations for faster tests
+# Disable all keyserver operations
+disable-http
+disable-ldap
+disable-ipv6
+EOF
+
+  # Set restrictive permissions
+  chmod 600 "$gpg_conf" "$dirmngr_conf" 2>/dev/null || true
+}
+
+
 function test_user_password {
   # Password for 'user3@gitsecret.io' is 'user3pass'
   # As it was set on key creation.
@@ -252,6 +285,9 @@ function remove_git_repository {
 function set_state_initial {
   cd "$BATS_TMPDIR" || exit 1
   rm -rf "${BATS_TMPDIR:?}/*"
+  
+  # Setup GPG configuration to disable network operations for faster tests
+  setup_gpg_offline_config
 }
 
 
