@@ -81,6 +81,7 @@ jobs:
     steps:
     - uses: Vampire/setup-wsl@v6
       with: 
+        distribution: Ubuntu-24.04
         update: 'true'
         additional-packages: gnupg make man git gawk file
     - run: git config --global core.autocrlf input
