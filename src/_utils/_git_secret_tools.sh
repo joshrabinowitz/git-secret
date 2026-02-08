@@ -214,8 +214,13 @@ function _gawk_inplace {
 
   local program_file
   program_file=$(_os_based __temp_file)
-  printf '%s' "$program" > "$program_file"
-  trap 'rm -f "$program_file"' RETURN
+  if [[ -z "$program_file" ]]; then
+    return 1
+  fi
+  trap 'if [[ -n "$program_file" ]]; then rm -f "$program_file"; fi' RETURN
+  if ! printf '%s' "$program" > "$program_file"; then
+    return 1
+  fi
 
   local gawk_args=()
   for index in "${!parms[@]}"; do
