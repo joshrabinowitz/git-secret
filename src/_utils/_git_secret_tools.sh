@@ -220,12 +220,15 @@ function _gawk_inplace {
   for index in "${!parms[@]}"; do
     if [[ "$index" -eq "$program_index" ]]; then
       gawk_args+=("-f" "$program_file")
-    else
-      gawk_args+=("${parms[$index]}")
+      continue
     fi
+    gawk_args+=("${parms[$index]}")
   done
 
-  gawk "${gawk_args[@]}" > "$temporary_filename"
+  if ! gawk "${gawk_args[@]}" > "$temporary_filename"; then
+    rm -f "$program_file"
+    return 1
+  fi
   rm -f "$program_file"
   mv "$temporary_filename" "$dest_file"
 }
