@@ -206,10 +206,27 @@ function _gawk_inplace {
   local last_index
   last_index=$((${#parms[@]} - 1))
   local dest_file="${parms[$last_index]}"
+  local program_index
+  program_index=$((${#parms[@]} - 2))
+  local program="${parms[$program_index]}"
 
   _temporary_file
 
-  gawk "${parms[@]}" > "$temporary_filename"
+  local program_file
+  program_file=$(_os_based __temp_file)
+  printf '%s' "$program" > "$program_file"
+
+  local gawk_args=()
+  for index in "${!parms[@]}"; do
+    if [[ "$index" -eq "$program_index" ]]; then
+      gawk_args+=("-f" "$program_file")
+    else
+      gawk_args+=("${parms[$index]}")
+    fi
+  done
+
+  gawk "${gawk_args[@]}" > "$temporary_filename"
+  rm -f "$program_file"
   mv "$temporary_filename" "$dest_file"
 }
 
