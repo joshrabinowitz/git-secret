@@ -187,14 +187,30 @@ function _set_config {
 }
 
 
+# Array to track all temporary files for cleanup
+_SECRETS_TEMPORARY_FILES=()
+
 # this sets the global variable 'temporary_filename'
 # currently this function is only used by 'hide'
 function _temporary_file {
   # This function creates temporary file
   # which will be removed on system exit.
   temporary_filename=$(_os_based __temp_file)  # is not `local` on purpose.
+  _SECRETS_TEMPORARY_FILES+=("$temporary_filename")
 
-  trap 'if [[ -f "$temporary_filename" ]]; then if [[ -n "$_SECRETS_VERBOSE" ]] || [[ "$SECRETS_TEST_VERBOSE" == 1 ]]; then echo "git-secret: cleaning up: $temporary_filename"; fi; rm -f "$temporary_filename"; fi;' EXIT
+  trap '_cleanup_temporary_files' EXIT
+}
+
+function _cleanup_temporary_files {
+  for _tmp_f in "${_SECRETS_TEMPORARY_FILES[@]}"; do
+    if [[ -f "$_tmp_f" ]]; then
+      if [[ -n "$_SECRETS_VERBOSE" ]] || [[ "$SECRETS_TEST_VERBOSE" == 1 ]]; then
+        echo "git-secret: cleaning up: $_tmp_f"
+      fi
+      rm -f "$_tmp_f"
+    fi
+  done
+  _SECRETS_TEMPORARY_FILES=()
 }
 
 
@@ -202,13 +218,15 @@ function _temporary_file {
 
 
 function _gawk_inplace {
-  local parms="$*"
-  local dest_file
-  dest_file="$(echo "$parms" | gawk -v RS="'" -v FS="'" 'END{ gsub(/^\s+/,""); print $1 }')"
+  # All arguments except the last are passed directly to gawk.
+  # The last argument is the destination file (also passed to gawk as input).
+  local args=("$@")
+  local last_index=$(( ${#args[@]} - 1 ))
+  local dest_file="${args[$last_index]}"
 
   _temporary_file
 
-  bash -c "gawk ${parms}" > "$temporary_filename"
+  gawk "${args[@]}" > "$temporary_filename"
   mv "$temporary_filename" "$dest_file"
 }
 
@@ -253,7 +271,7 @@ function _fsdb_rm_record {
   local key="$1"  # required
   local fsdb="$2" # required
 
-  _gawk_inplace -v key="'$key'" "'$AWK_FSDB_RM_RECORD'" "$fsdb"
+  _gawk_inplace -v key="$key" "$AWK_FSDB_RM_RECORD" "$fsdb"
 }
 
 
@@ -261,7 +279,7 @@ function _fsdb_clear_hashes {
   # First parameter is the path to fsdb
   local fsdb="$1" # required
 
-  _gawk_inplace "'$AWK_FSDB_CLEAR_HASHES'" "$fsdb"
+  _gawk_inplace "$AWK_FSDB_CLEAR_HASHES" "$fsdb"
 }
 
 

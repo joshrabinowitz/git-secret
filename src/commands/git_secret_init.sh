@@ -36,7 +36,7 @@ function gitignore_add_pattern {
   gitignore_file_path=$(_prepend_root_path '.gitignore')
 
   _maybe_create_gitignore
-  _gawk_inplace -v pattern="$pattern" "'$AWK_ADD_TO_GITIGNORE'" "$gitignore_file_path"
+  _gawk_inplace -v pattern="$pattern" "$AWK_ADD_TO_GITIGNORE" "$gitignore_file_path"
 }
 
 function init {
@@ -73,6 +73,7 @@ function init {
   mkdir "$git_secret_dir" "$(_get_secrets_dir_keys)" "$(_get_secrets_dir_path)"
   chmod 700 "$(_get_secrets_dir_keys)"  # for #811, set to rwx------
   touch "$(_get_secrets_dir_paths_mapping)"
+  chmod 600 "$(_get_secrets_dir_paths_mapping)"
 
   _message "init created: '$git_secret_dir/'"
 
