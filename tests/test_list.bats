@@ -6,9 +6,20 @@ FILE_TO_HIDE="file_to_hide"
 FILE_CONTENTS="hidden content юникод"
 
 
-function setup {
+# File-level setup: import GPG keys once for all tests
+function setup_file {
   install_fixture_key "$TEST_DEFAULT_USER"
+}
 
+
+# File-level teardown: remove GPG keys once after all tests
+function teardown_file {
+  uninstall_fixture_key "$TEST_DEFAULT_USER"
+}
+
+
+# Per-test setup: prepare file system state
+function setup {
   set_state_initial
   set_state_git
   set_state_secret_init
@@ -17,10 +28,9 @@ function setup {
 }
 
 
+# Per-test teardown: clean up file system state
 function teardown {
   rm "$FILE_TO_HIDE"
-
-  uninstall_fixture_key "$TEST_DEFAULT_USER"
   unset_current_state
 }
 
