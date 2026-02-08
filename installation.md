@@ -22,7 +22,7 @@ You can check the full list of automated test platforms
 
 We are always interested in getting `git-secret` working and tested on additional systems.
 If you get `git-secret` working on a new system and the tests pass for you, 
-you can add a Github Action to test your platform to that file. 
+you can add a GitHub Action to test your platform to that file. 
 Also we welcome improvements to tests or `git-secret` code for any platform.
 
 ## Installation process
@@ -84,18 +84,9 @@ and you can see a list of supported architectures
 
 ---
 
-### Arch Linux / `PKGBUILD` or `AUR`
+### Arch Linux
 
-The _Arch_ way to install git-secret is to use the directions for
-"Installing Packages" at [Arch User Repository Documentation](https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages)
-along with the `PKGBUILD` file from the [git-secret Arch Linux Package](https://aur.archlinux.org/packages/git-secret/)
-
-You can also install from the [AUR](https://aur.archlinux.org/) using your helper of choice by
-installing the package `git-secret`, for example using [yay](https://github.com/Jguer/yay)
-
-```bash
-yay -S git-secret
-```
+Use `Manual Installation` method described below.
 
 ---
 
@@ -160,6 +151,6 @@ PREFIX="/usr/local" make install
 ```
 
 Note that you can change `PREFIX` to be any directory you subsequently include in in your `PATH`
-environment variable. We generally recommend you stick to the the default 
+environment variable. We generally recommend you stick to the default 
 install locations for simplicity, but if you know what you're doing you are welcome to change it.
 

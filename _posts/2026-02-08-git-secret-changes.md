@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 'git-secret-changes'
-date: 2022-06-17 18:32:06 +0000
+date: 2026-02-08 04:10:42 +0000
 permalink: git-secret-changes
 categories: command
 ---
@@ -28,7 +28,7 @@ Note also this command can be affected by the `SECRETS_PINENTRY` environment var
 
 ## OPTIONS
 
-    -d  - specifies `--homedir` option for the `gpg`. Use this option if your store your keys in a custom location.
+    -d  - specifies `--homedir` option for the `gpg`. Use this option if you store your keys in a custom location.
     -p  - specifies password for noinput mode, adds `--passphrase` option for `gpg`.
     -h  - shows help.
 
