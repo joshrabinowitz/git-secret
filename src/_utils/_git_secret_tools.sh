@@ -202,13 +202,12 @@ function _temporary_file {
 
 
 function _gawk_inplace {
-  local parms="$*"
-  local dest_file
-  dest_file="$(echo "$parms" | gawk -v RS="'" -v FS="'" 'END{ gsub(/^\s+/,""); print $1 }')"
+  local dest_file="${*: -1}"          # last argument is the destination file
+  local -a args=("${@:1:$#-1}")      # all other arguments are gawk options/script
 
   _temporary_file
 
-  bash -c "gawk ${parms}" > "$temporary_filename"
+  gawk "${args[@]}" "$dest_file" > "$temporary_filename"
   mv "$temporary_filename" "$dest_file"
 }
 
@@ -253,7 +252,7 @@ function _fsdb_rm_record {
   local key="$1"  # required
   local fsdb="$2" # required
 
-  _gawk_inplace -v key="'$key'" "'$AWK_FSDB_RM_RECORD'" "$fsdb"
+  _gawk_inplace -v key="$key" "$AWK_FSDB_RM_RECORD" "$fsdb"
 }
 
 
@@ -261,7 +260,7 @@ function _fsdb_clear_hashes {
   # First parameter is the path to fsdb
   local fsdb="$1" # required
 
-  _gawk_inplace "'$AWK_FSDB_CLEAR_HASHES'" "$fsdb"
+  _gawk_inplace "$AWK_FSDB_CLEAR_HASHES" "$fsdb"
 }
 
 
