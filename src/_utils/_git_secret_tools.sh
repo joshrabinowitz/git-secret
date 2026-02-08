@@ -187,14 +187,30 @@ function _set_config {
 }
 
 
+# Array to track all temporary files for cleanup
+_SECRETS_TEMPORARY_FILES=()
+
 # this sets the global variable 'temporary_filename'
 # currently this function is only used by 'hide'
 function _temporary_file {
   # This function creates temporary file
   # which will be removed on system exit.
   temporary_filename=$(_os_based __temp_file)  # is not `local` on purpose.
+  _SECRETS_TEMPORARY_FILES+=("$temporary_filename")
 
-  trap 'if [[ -f "$temporary_filename" ]]; then if [[ -n "$_SECRETS_VERBOSE" ]] || [[ "$SECRETS_TEST_VERBOSE" == 1 ]]; then echo "git-secret: cleaning up: $temporary_filename"; fi; rm -f "$temporary_filename"; fi;' EXIT
+  trap '_cleanup_temporary_files' EXIT
+}
+
+function _cleanup_temporary_files {
+  for _tmp_f in "${_SECRETS_TEMPORARY_FILES[@]}"; do
+    if [[ -f "$_tmp_f" ]]; then
+      if [[ -n "$_SECRETS_VERBOSE" ]] || [[ "$SECRETS_TEST_VERBOSE" == 1 ]]; then
+        echo "git-secret: cleaning up: $_tmp_f"
+      fi
+      rm -f "$_tmp_f"
+    fi
+  done
+  _SECRETS_TEMPORARY_FILES=()
 }
 
 
