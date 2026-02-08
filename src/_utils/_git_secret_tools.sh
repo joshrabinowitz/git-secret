@@ -202,8 +202,8 @@ function _temporary_file {
 
 
 function _gawk_inplace {
-  local dest_file="${*: -1}"
-  local -a args=("${@:1:$#-1}")
+  local dest_file="${*: -1}"          # last argument is the destination file
+  local -a args=("${@:1:$#-1}")      # all other arguments are gawk options/script
 
   _temporary_file
 
