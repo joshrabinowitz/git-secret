@@ -218,7 +218,7 @@ function _gawk_inplace {
     return 1
   fi
   trap 'if [[ -n "$program_file" ]]; then rm -f "$program_file"; fi' RETURN
-  if ! printf '%s' "$program" > "$program_file"; then
+  if ! printf '%s\n' "$program" > "$program_file"; then
     return 1
   fi
 
@@ -232,6 +232,7 @@ function _gawk_inplace {
   done
 
   if ! gawk "${gawk_args[@]}" > "$temporary_filename"; then
+    _warn "gawk failed while updating $dest_file"
     return 1
   fi
   mv "$temporary_filename" "$dest_file"
