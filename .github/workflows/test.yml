@@ -80,7 +80,8 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: Vampire/setup-wsl@v6
-      with: 
+      with:
+        distribution: Ubuntu-22.04
         update: 'true'
         additional-packages: gnupg make man git gawk file
     - run: git config --global core.autocrlf input
