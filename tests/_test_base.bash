@@ -123,9 +123,10 @@ function stop_gpg_agent {
       '/gpg-agent/ { if ( $0 !~ "awk" ) { system("kill "$1) } }' >> "$TEST_OUTPUT_FILE" 2>&1
   else
     local ps_is_busybox
-    ps_is_busybox=_exe_is_busybox 'ps'
+    ps_is_busybox=$(_exe_is_busybox 'ps')
     if [[ $ps_is_busybox -eq '1' ]]; then
-      echo '# git-secret: tests: not stopping gpg-agent on busybox' >&3
+      # On Alpine/busybox, ps doesn't show command arguments, so use gpgconf instead
+      gpgconf --homedir "$TEST_GPG_HOMEDIR" --kill gpg-agent >> "$TEST_OUTPUT_FILE" 2>&1 || true
     else
       ps -wx -U "$username" | gawk \
         '/gpg-agent --homedir/ { if ( $0 !~ "awk" ) { system("kill "$1) } }' >> "$TEST_OUTPUT_FILE" 2>&1
