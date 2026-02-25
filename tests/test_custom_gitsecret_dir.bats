@@ -93,3 +93,73 @@ function teardown {
   # clean up
   rm -rf "$secrets_subdir"
 }
+
+
+@test "clean removes encrypted files when SECRETS_DIR is in a subdirectory" {
+  local secrets_subdir='secrets-dir'
+  mkdir "$secrets_subdir"
+
+  ( # start subshell for following commands
+    cd "$secrets_subdir"
+
+    SECRETS_DIR=secrets-dir/.git-secret run git secret init
+    [ "$status" -eq 0 ]
+
+    SECRETS_DIR=secrets-dir/.git-secret run git secret tell \
+      -d "$TEST_GPG_HOMEDIR" "$TEST_DEFAULT_USER"
+    [ "$status" -eq 0 ]
+
+    echo "password123" > credentials.txt
+
+    SECRETS_DIR=secrets-dir/.git-secret run git secret add credentials.txt
+    [ "$status" -eq 0 ]
+
+    SECRETS_DIR=secrets-dir/.git-secret run git secret hide
+    [ "$status" -eq 0 ]
+
+    SECRETS_DIR=secrets-dir/.git-secret run git secret clean
+    [ "$status" -eq 0 ]
+  ) # end subshell
+
+  # The encrypted file must have been deleted by clean:
+  [ ! -f "$secrets_subdir/credentials.txt.secret" ]
+
+  # clean up
+  rm -rf "$secrets_subdir"
+}
+
+
+@test "hide -c removes old encrypted files when SECRETS_DIR is in a subdirectory" {
+  local secrets_subdir='secrets-dir'
+  mkdir "$secrets_subdir"
+
+  ( # start subshell for following commands
+    cd "$secrets_subdir"
+
+    SECRETS_DIR=secrets-dir/.git-secret run git secret init
+    [ "$status" -eq 0 ]
+
+    SECRETS_DIR=secrets-dir/.git-secret run git secret tell \
+      -d "$TEST_GPG_HOMEDIR" "$TEST_DEFAULT_USER"
+    [ "$status" -eq 0 ]
+
+    echo "password123" > credentials.txt
+
+    SECRETS_DIR=secrets-dir/.git-secret run git secret add credentials.txt
+    [ "$status" -eq 0 ]
+
+    # First hide to create the encrypted file:
+    SECRETS_DIR=secrets-dir/.git-secret run git secret hide
+    [ "$status" -eq 0 ]
+
+    # hide -c should clean the old encrypted file and produce a new one:
+    SECRETS_DIR=secrets-dir/.git-secret run git secret hide -c
+    [ "$status" -eq 0 ]
+  ) # end subshell
+
+  # A fresh encrypted file must exist after hide -c:
+  [ -f "$secrets_subdir/credentials.txt.secret" ]
+
+  # clean up
+  rm -rf "$secrets_subdir"
+}
