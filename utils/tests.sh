@@ -4,7 +4,7 @@
 
 set -e
 
-TEST_DIR="/tmp/git-secret-test/this dir has a ' quote"
+TEST_DIR='/tmp/git-secret-test/this dir has a " doublequote'
 
 rm -rf "${TEST_DIR}"
 mkdir -p "${TEST_DIR}"
