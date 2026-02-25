@@ -253,6 +253,12 @@ function remove_git_repository {
 function set_state_initial {
   cd "$BATS_TMPDIR" || exit 1
   rm -rf "${BATS_TMPDIR:?}/*"
+  # Safety net: remove hidden dirs that may persist from a prior failed teardown.
+  # The rm above is a no-op (glob inside double quotes is literal), so we must
+  # explicitly clean up dot-dirs to prevent 'already initialized' errors.
+  rm -rf "${BATS_TMPDIR:?}/${_SECRETS_DIR}"
+  rm -rf "${BATS_TMPDIR:?}/.git"
+  rm -rf "${BATS_TMPDIR:?}/.gitignore"
 }
 
 
