@@ -126,14 +126,13 @@ function stop_gpg_agent {
   else
     local ps_is_busybox
     ps_is_busybox=$(_exe_is_busybox 'ps')
-    # Use gpgconf to properly kill gpg-agent and keyboxd (gnupg 2.4.x on FreeBSD/Linux
-    # starts a separate keyboxd daemon that ps-based killing misses).
-    gpgconf --homedir "$TEST_GPG_HOMEDIR" --kill gpg-agent >> "$TEST_OUTPUT_FILE" 2>&1 || true
-    if [[ $ps_is_busybox -ne '1' ]]; then
-      # On non-busybox, also kill any remaining agents for other homedirs (e.g. the secrets keyring)
-      # Use -ww for unlimited-width output so FreeBSD ps shows the full --homedir argument.
-      ps -wwx -U "$username" | gawk \
-        '/gpg-agent --homedir/ { if ( $0 !~ "awk" ) { system("kill "$1) } }' >> "$TEST_OUTPUT_FILE" 2>&1 || true
+
+    if [[ $ps_is_busybox -eq '1' ]]; then
+      # On Alpine/busybox, ps doesn't show command arguments, so use gpgconf instead
+      gpgconf --homedir "$TEST_GPG_HOMEDIR" --kill gpg-agent >> "$TEST_OUTPUT_FILE" 2>&1 || true
+    else
+      ps -wx -U "$username" | gawk \
+        '/gpg-agent --homedir/ { if ( $0 !~ "awk" ) { system("kill "$1) } }' >> "$TEST_OUTPUT_FILE" 2>&1
     fi
   fi
 }
@@ -251,12 +250,14 @@ function remove_git_repository {
 
 function set_state_initial {
   cd "$BATS_TMPDIR" || exit 1
-  # rm -rf "${BATS_TMPDIR:?}/*" is a no-op: the glob inside double quotes is never
-  # expanded by bash.  Explicitly remove the directories that tests create so that a
-  # failed teardown from a previous test cannot cascade into the next test's setup.
-  rm -rf "${BATS_TMPDIR:?}/${_SECRETS_DIR:-.gitsecret}"
+
+  rm -rf "${BATS_TMPDIR:?}/*"
+  # Safety net: remove hidden dirs that may persist from a prior failed teardown.
+  # The rm above is a no-op (glob inside double quotes is literal), so we must
+  # explicitly clean up dot-dirs to prevent 'already initialized' errors.
+  rm -rf "${BATS_TMPDIR:?}/${_SECRETS_DIR}"
   rm -rf "${BATS_TMPDIR:?}/.git"
-  rm -f  "${BATS_TMPDIR:?}/.gitignore"
+  rm -rf "${BATS_TMPDIR:?}/.gitignore"
 }
 
 
