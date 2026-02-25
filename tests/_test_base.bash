@@ -125,12 +125,15 @@ function stop_gpg_agent {
       '/gpg-agent/ { if ( $0 !~ "awk" ) { system("kill "$1) } }' >> "$TEST_OUTPUT_FILE" 2>&1
   else
     local ps_is_busybox
-    ps_is_busybox=_exe_is_busybox 'ps'
-    if [[ $ps_is_busybox -eq '1' ]]; then
-      echo '# git-secret: tests: not stopping gpg-agent on busybox' >&3
-    else
-      ps -wx -U "$username" | gawk \
-        '/gpg-agent --homedir/ { if ( $0 !~ "awk" ) { system("kill "$1) } }' >> "$TEST_OUTPUT_FILE" 2>&1
+    ps_is_busybox=$(_exe_is_busybox 'ps')
+    # Use gpgconf to properly kill gpg-agent and keyboxd (gnupg 2.4.x on FreeBSD/Linux
+    # starts a separate keyboxd daemon that ps-based killing misses).
+    gpgconf --homedir "$TEST_GPG_HOMEDIR" --kill gpg-agent >> "$TEST_OUTPUT_FILE" 2>&1 || true
+    if [[ $ps_is_busybox -ne '1' ]]; then
+      # On non-busybox, also kill any remaining agents for other homedirs (e.g. the secrets keyring)
+      # Use -ww for unlimited-width output so FreeBSD ps shows the full --homedir argument.
+      ps -wwx -U "$username" | gawk \
+        '/gpg-agent --homedir/ { if ( $0 !~ "awk" ) { system("kill "$1) } }' >> "$TEST_OUTPUT_FILE" 2>&1 || true
     fi
   fi
 }
@@ -188,7 +191,9 @@ function uninstall_fixture_key {
   local email
 
   email="$1"
-  _gpgtest --yes --delete-key "$email" >> "$TEST_OUTPUT_FILE" 2>&1
+  # Use || true: gnupg 2.4.x on FreeBSD may return non-zero for key deletion
+  # (e.g. when keyboxd is running). A failure here must not abort teardown.
+  _gpgtest --yes --delete-key "$email" >> "$TEST_OUTPUT_FILE" 2>&1 || true
 }
 
 
@@ -202,7 +207,8 @@ function uninstall_fixture_full_key {
     fingerprint=$(get_gpg_fingerprint_by_email "$email")
   fi
 
-  _gpgtest --yes --delete-secret-keys "$fingerprint" >> "$TEST_OUTPUT_FILE" 2>&1
+  # Use || true: gnupg 2.4.x on FreeBSD may return non-zero for secret-key deletion.
+  _gpgtest --yes --delete-secret-keys "$fingerprint" >> "$TEST_OUTPUT_FILE" 2>&1 || true
 
   uninstall_fixture_key "$1"
 }
@@ -245,7 +251,12 @@ function remove_git_repository {
 
 function set_state_initial {
   cd "$BATS_TMPDIR" || exit 1
-  rm -rf "${BATS_TMPDIR:?}/*"
+  # rm -rf "${BATS_TMPDIR:?}/*" is a no-op: the glob inside double quotes is never
+  # expanded by bash.  Explicitly remove the directories that tests create so that a
+  # failed teardown from a previous test cannot cascade into the next test's setup.
+  rm -rf "${BATS_TMPDIR:?}/${_SECRETS_DIR:-.gitsecret}"
+  rm -rf "${BATS_TMPDIR:?}/.git"
+  rm -f  "${BATS_TMPDIR:?}/.gitignore"
 }
 
 
