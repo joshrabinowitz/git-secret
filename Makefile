@@ -22,11 +22,11 @@ build:
 
 .PHONY: install
 install:
-	"${SHELL}" ./utils/install.sh '${DESTDIR}${PREFIX}'
+	"${SHELL}" ./utils/install.sh '$(subst ','"'"',${DESTDIR}${PREFIX})'
 
 .PHONY: uninstall
 uninstall:
-	"${SHELL}" ./utils/uninstall.sh '${DESTDIR}${PREFIX}'
+	"${SHELL}" ./utils/uninstall.sh '$(subst ','"'"',${DESTDIR}${PREFIX})'
 
 #
 # Testing and linting:
