@@ -166,7 +166,7 @@ function install_fixture_full_key {
   cp "$FIXTURES_DIR/gpg/${1}/private.key" "$private_key"
 
   if [[ "${GPG_VER_21:-0}" -eq 1 ]]; then
-    echo "$(test_user_password "$1")" | _gpgtest --allow-secret-key-import \
+    test_user_password "$1" | _gpgtest --allow-secret-key-import \
       --import "$private_key" >> "${TEST_OUTPUT_FILE}" 2>&1
   else
     _gpgtest --allow-secret-key-import \
