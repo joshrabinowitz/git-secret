@@ -68,13 +68,7 @@ jobs:
       with:
         usesh: true
         prepare: pkg install -y gnupg bash gmake git gawk
-        run: |
-          which -a bash
-          which -a shell
-          whoami
-          env
-          freebsd-version
-          gmake test
+        run: gmake test
 
   windows-wsl-ci:
     runs-on: windows-latest
