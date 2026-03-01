@@ -148,6 +148,17 @@ function get_gpg_fingerprint_by_email {
 }
 
 
+function get_gpg_public_fingerprint_by_email {
+  local email="$1"
+  local fingerprint
+
+  fingerprint=$(_gpgtest --with-fingerprint \
+                         --with-colon \
+                         --list-keys "$email" | gawk "$AWK_GPG_GET_FP")
+  echo "$fingerprint"
+}
+
+
 function install_fixture_key {
   local public_key="$BATS_TMPDIR/public-${1}.key"
 
