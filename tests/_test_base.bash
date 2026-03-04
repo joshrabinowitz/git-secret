@@ -126,6 +126,7 @@ function stop_gpg_agent {
   else
     local ps_is_busybox
     ps_is_busybox=$(_exe_is_busybox 'ps')
+
     if [[ $ps_is_busybox -eq '1' ]]; then
       # On Alpine/busybox, ps doesn't show command arguments, so use gpgconf instead
       gpgconf --homedir "$TEST_GPG_HOMEDIR" --kill gpg-agent >> "$TEST_OUTPUT_FILE" 2>&1 || true
@@ -200,7 +201,9 @@ function uninstall_fixture_key {
   local email
 
   email="$1"
-  _gpgtest --yes --delete-key "$email" >> "$TEST_OUTPUT_FILE" 2>&1
+  # Use || true: gnupg 2.4.x on FreeBSD may return non-zero for key deletion
+  # (e.g. when keyboxd is running). A failure here must not abort teardown.
+  _gpgtest --yes --delete-key "$email" >> "$TEST_OUTPUT_FILE" 2>&1 || true
 }
 
 
@@ -214,7 +217,8 @@ function uninstall_fixture_full_key {
     fingerprint=$(get_gpg_fingerprint_by_email "$email")
   fi
 
-  _gpgtest --yes --delete-secret-keys "$fingerprint" >> "$TEST_OUTPUT_FILE" 2>&1
+  # Use || true: gnupg 2.4.x on FreeBSD may return non-zero for secret-key deletion.
+  _gpgtest --yes --delete-secret-keys "$fingerprint" >> "$TEST_OUTPUT_FILE" 2>&1 || true
 
   uninstall_fixture_key "$1"
 }
@@ -257,6 +261,7 @@ function remove_git_repository {
 
 function set_state_initial {
   cd "$BATS_TMPDIR" || exit 1
+
   rm -rf "${BATS_TMPDIR:?}/*"
   # Safety net: remove hidden dirs that may persist from a prior failed teardown.
   # The rm above is a no-op (glob inside double quotes is literal), so we must

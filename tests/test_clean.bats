@@ -21,7 +21,7 @@ function setup {
 
 function teardown {
   # This also needs to be cleaned:
-  rm "$FIRST_FILE" "$SECOND_FILE"
+  rm -f "$FIRST_FILE" "$SECOND_FILE"
 
   uninstall_fixture_key "$TEST_DEFAULT_USER"
   unset_current_state

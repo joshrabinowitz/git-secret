@@ -22,7 +22,7 @@ function setup {
 
 
 function teardown {
-  rm "$FIRST_FILE" "$SECOND_FILE"
+  rm -f "$FIRST_FILE" "$SECOND_FILE"
 
   uninstall_fixture_key "$TEST_NONAME_USER"
   unset_current_state
