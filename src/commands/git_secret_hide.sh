@@ -41,20 +41,9 @@ function _optional_delete {
   fi
 }
 
-function _get_checksum_local {
-  local checksum="$SECRETS_CHECKSUM_COMMAND"
-  echo "$checksum"
-}
-
 function _get_file_hash {
   local input_path="$1" # Required
-  local checksum_local
-  local file_hash
-
-  checksum_local="$(_get_checksum_local)"
-  file_hash=$($checksum_local "$input_path" | gawk '{print $1}')
-
-  echo "$file_hash"
+  $SECRETS_CHECKSUM_COMMAND "$input_path" | gawk '{print $1}'
 }
 
 function _fsdb_update_hash {
