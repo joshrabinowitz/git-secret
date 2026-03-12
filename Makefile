@@ -1,6 +1,7 @@
 SHELL:=bash
-PREFIX?="/usr"
+PREFIX?=/usr
 DESTDIR?=
+export DESTDIR
 
 #
 # Building:
@@ -22,11 +23,11 @@ build:
 
 .PHONY: install
 install:
-	"${SHELL}" ./utils/install.sh "${DESTDIR}${PREFIX}"
+	"${SHELL}" ./utils/install.sh "$${DESTDIR}${PREFIX}"
 
 .PHONY: uninstall
 uninstall:
-	"${SHELL}" ./utils/uninstall.sh "${DESTDIR}${PREFIX}"
+	"${SHELL}" ./utils/uninstall.sh "$${DESTDIR}${PREFIX}"
 
 #
 # Testing and linting:
