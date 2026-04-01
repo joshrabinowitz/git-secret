@@ -472,10 +472,12 @@ function _find_and_remove_secrets_formatted {
   _list_all_added_files # sets array variable 'filenames'
 
   for filename in "${filenames[@]}"; do
-    local path # absolute path
+    local encrypted_filename
+    local encrypted_filepath
     encrypted_filename=$(_get_encrypted_filename "$filename")
-    if [[ -f "$encrypted_filename" ]]; then
-      rm "$encrypted_filename"
+    encrypted_filepath=$(_prepend_root_path "$encrypted_filename")
+    if [[ -f "$encrypted_filepath" ]]; then
+      rm "$encrypted_filepath"
       if [[ -n "$_SECRETS_VERBOSE" ]]; then
         echo "git-secret: deleted: $encrypted_filename"
       fi

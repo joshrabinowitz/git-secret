@@ -31,8 +31,10 @@ function _optional_delete {
     while read -r line; do  # each line is a record like: filename: or filename:hash
       local filename
       filename=$(_get_record_filename "$line")
-      if [[ -e "$filename" ]]; then 
-        rm "$filename"
+      local filepath
+      filepath=$(_prepend_root_path "$filename")
+      if [[ -e "$filepath" ]]; then
+        rm "$filepath"
         if [[ -n "$_SECRETS_VERBOSE" ]]; then
           _message "deleted: $filename"
         fi
