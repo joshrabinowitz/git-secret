@@ -170,18 +170,14 @@ function _clean_windows_path {
 function _set_config {
   # This function creates a line in the config, or alters it.
 
-  local key="$1" # required
-  local value="$2" # required
+  local key="$1"    # required
+  local value="$2"  # required
   local filename="$3" # required
 
-  # The exit status is 0 (true) if the name was found, 1 (false) if not:
-  local contains
-  contains=$(grep -Fq "$key" "$filename"; echo "$?")
-
   # Append or alter?
-  if [[ "$contains" -eq 0 ]]; then
+  if grep -Fq "$key" "$filename"; then
     _os_based __replace_in_file "$@"
-  elif [[ "$contains" -eq 1 ]]; then
+  else
     echo "${key} = ${value}" >> "$filename"
   fi
 }
@@ -216,21 +212,13 @@ function _gawk_inplace {
 
 function _get_record_filename {
   # Returns 1st field from passed record
-  local record="$1"
-  local filename
-  filename=$(echo "$record" | awk -F: '{print $1}')
-
-  echo "$filename"
+  echo "$1" | awk -F: '{print $1}'
 }
 
 
 function _get_record_hash {
   # Returns 2nd field from passed record
-  local record="$1"
-  local hash
-  hash=$(echo "$record" | awk -F: '{print $2}')
-
-  echo "$hash"
+  echo "$1" | awk -F: '{print $2}'
 }
 
 
@@ -472,7 +460,6 @@ function _find_and_remove_secrets_formatted {
   _list_all_added_files # sets array variable 'filenames'
 
   for filename in "${filenames[@]}"; do
-    local path # absolute path
     encrypted_filename=$(_get_encrypted_filename "$filename")
     if [[ -f "$encrypted_filename" ]]; then
       rm "$encrypted_filename"
@@ -773,21 +760,13 @@ function _extract_emails_from_gpg_output {
   #  (and maybe a comment) and we pass it through.
   # Sed at the end removes any 'comment' that appears in parentheses, for #530
   # 3>&- closes fd 3 for bats, see https://github.com/bats-core/bats-core/blob/master/docs/source/writing-tests.md#file-descriptor-3-read-this-if-bats-hangs
-  local emails
-  emails=$(echo "$result" | gawk -F: '{print gensub(/.*<(.*)>.*/, "\\1", "g", $10); }' | sed 's/([^)]*)//g' 3>&-)
-  echo "$emails"
+  echo "$result" | gawk -F: '{print gensub(/.*<(.*)>.*/, "\\1", "g", $10); }' | sed 's/([^)]*)//g' 3>&-
 }
 
 
 function _get_users_in_gitsecret_keyring {
   # show the users in the gitsecret keyring.
-  local secrets_dir_keys
-  secrets_dir_keys=$(_get_secrets_dir_keys)
-
-  local result
-  result=$(_get_users_in_gpg_keyring "$secrets_dir_keys")
-
-  echo "$result"
+  _get_users_in_gpg_keyring "$(_get_secrets_dir_keys)"
 }
 
 
@@ -796,10 +775,8 @@ function _get_recipients {
   # These users are called 'recipients' in the `gpg` terms.
   # It basically just parses the `gpg` public keys
 
-  local result
   # put -r before each user:
-  result=$(_get_users_in_gitsecret_keyring | sed 's/^/-r/')
-  echo "$result"
+  _get_users_in_gitsecret_keyring | sed 's/^/-r/'
 }
 
 

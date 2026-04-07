@@ -71,8 +71,7 @@ function add {
 
   local fsdb
   fsdb=$(_get_secrets_dir_paths_mapping)
-  local count
-  count=0
+  local count=0
 
   for item in "${items[@]}"; do
     local path
@@ -89,7 +88,7 @@ function add {
         _message "adding file: $key"
       fi
 
-      ((count=count+1))
+      (( count += 1 ))
     fi
   done
 
